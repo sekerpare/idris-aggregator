@@ -1,5 +1,7 @@
 import Data.Vect
 
+data  LargerIsBetter = True | False
+
 -- HELPERS ------------------------------------------------------------
 min_helper : Vect n Double -> Double -> Double
 min_helper [] x = x
@@ -53,6 +55,9 @@ table_1  : Vect 3 (Vect 7 Double)
 table_1  =[[45, 141, 88, 132, 118, 252, 292 ],
            [302,366, 380,364, 387, 455, 516 ],
            [6.3,1.5, 1.3,0.5, 0.45,0.05,0.09]]
+           
+larger : Vect 3 LargerIsBetter
+larger =[True, True, False]
 
 creep : Vect 7 Double
 creep = [6.3,1.5, 1.3,0.5, 0.45,0.05,0.09]
@@ -74,16 +79,18 @@ table      =[[0.00 ,0.39 ,0.17 ,0.35, 0.30, 0.84, 1.00 ],
 --Step1
 --Normalization
 normalize: Vect n Double -> Double -> Double -> Vect n Double
-normalize [] the_min the_max= []
-normalize (x :: xs) the_min the_max= ((x - the_min) / (the_max - the_min ))::(normalize xs the_min the_max)
+normalize [] lower upper= []
+normalize (x :: xs) lower upper = ((x - lower) / (upper - lower ))::(normalize xs lower upper)
 
 
-normalize_table : Vect m (Vect n Double) -> Vect m (Vect n Double)
-normalize_table [] = []
-normalize_table (x :: xs) = (normalize x (min x) (max x)) :: (normalize_table xs)
+normalize_table : Vect m (Vect n Double)->Vect m LargerIsBetter -> Vect m (Vect n Double)
+normalize_table [] [] = []
+normalize_table (x :: xs) (True :: bs)  = (normalize x (min x) (max x)) :: (normalize_table xs bs)
+normalize_table (x :: xs) (False :: bs) = (normalize x (max x) (min x)) :: (normalize_table xs bs)
 
 
 --Step2------------------------------------------------------------------------------
+
 
 mean : Vect n Double -> Double
 mean xs{n} = (sum xs)/(cast) n
