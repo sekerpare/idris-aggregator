@@ -1,5 +1,5 @@
 import Data.Vect
-
+import AggregationLib
 data  LargerIsBetter = True | False
 
 -- HELPERS ------------------------------------------------------------
@@ -55,7 +55,12 @@ table_1  : Vect 3 (Vect 7 Double)
 table_1  =[[45, 141, 88, 132, 118, 252, 292 ],
            [302,366, 380,364, 387, 455, 516 ],
            [6.3,1.5, 1.3,0.5, 0.45,0.05,0.09]]
-           
+
+table_m  : Vect 3 (Vect 7 (Maybe Double))
+table_m  =[[Just 45 , Just 141, Just  88 , Just 132, Just  118 , Just  252, Just  292 ],
+           [Just 302, Just 366, Just  380, Just 364, Just  387 , Just  455, Just  516 ],
+           [Just 6.3, Just 1.5, Just  1.3, Just 0.5, Just  0.45, Just 0.05, Just 0.09 ]]
+
 larger : Vect 3 LargerIsBetter
 larger =[True, True, False]
 
@@ -78,15 +83,31 @@ table      =[[0.00 ,0.39 ,0.17 ,0.35, 0.30, 0.84, 1.00 ],
 
 --Step1
 --Normalization
-normalize: Vect n Double -> Double -> Double -> Vect n Double
+normalize: Vect n (Maybe Double) -> Maybe Double -> Maybe Double -> Vect n (Double)
+normalize [] l u = []
+normalize (x :: xs)  Nothing Nothing  = 0::(normalize xs Nothing Nothing )
+normalize (x :: xs)  Nothing (Just u) = 0::(normalize xs Nothing (Just u))
+normalize (x :: xs) (Just l) Nothing  = 0::(normalize xs (Just l) Nothing)
+normalize (Nothing :: xs) (Just l) (Just u)  = 0::(normalize xs (Just l) (Just u))
+normalize ((Just x) :: xs) (Just l) (Just u) = ((x - l) / (u - l ))::(normalize xs (Just l) (Just u))
+
+
+{-normalize (Nothing :: xs ) l u = 0::(normalize xs l u)
+normalize ((Just x) :: xs) l u = ((x - l) / (u - l ))::(normalize xs l u)
+
 normalize [] lower upper= []
-normalize (x :: xs) lower upper = ((x - lower) / (upper - lower ))::(normalize xs lower upper)
+normalize (x :: xs) l u = ((x - l) / (u - l ))::(normalize xs l u)
 
+-}
 
-normalize_table : Vect m (Vect n Double)->Vect m LargerIsBetter -> Vect m (Vect n Double)
+normalize_table : Vect m (Vect n (Maybe Double))->Vect m LargerIsBetter -> Vect m (Vect n Double)
 normalize_table [] [] = []
-normalize_table (x :: xs) (True :: bs)  = (normalize x (min x) (max x)) :: (normalize_table xs bs)
-normalize_table (x :: xs) (False :: bs) = (normalize x (max x) (min x)) :: (normalize_table xs bs)
+normalize_table (x :: xs) (True :: bs)
+  = (normalize x (minOfMaybeVect x) (maxOfMaybeVect x))
+    :: (normalize_table xs bs)
+normalize_table (x :: xs) (False :: bs)
+  = (normalize x (maxOfMaybeVect x) (minOfMaybeVect x))
+    :: (normalize_table xs bs)
 
 
 --Step2------------------------------------------------------------------------------
@@ -171,7 +192,7 @@ correlation_of_weighting (x :: xs){n = (S len)} ind = let newInd = restrict len 
                                                        in up/down
 
 
-{-
+
 calculation_correlation_weighting : Vect n (Vect n Double) -> Vect n Double
 calculation_correlation_weighting xs{n} = let list = (take n [0..])
                                               indices = fromList list
@@ -193,4 +214,3 @@ final_Weight_2 w1 w2 lambda = w1*lambda + w2*(1-lambda)
 
 final_Weight_3 : Double -> Double -> Double -> Double -> Double
 final_Weight_3 w1 w2 w3 lambda = w1*lambda + w2*(1-lambda)/2 +  w3*(1-lambda)/2
--}
