@@ -28,10 +28,10 @@ vectToMaybeVect (x :: xs) = [Just x] ++ vectToMaybeVect xs
 
 
 public export
-sumOfMaybeVect :Vect m (Maybe Double) ->Double
-sumOfMaybeVect [] = 0
-sumOfMaybeVect (Nothing  :: xs) = sumOfMaybeVect xs
-sumOfMaybeVect ((Just x) :: xs) = x + sumOfMaybeVect xs
+sumMaybeVect :Vect m (Maybe Double) ->Double
+sumMaybeVect [] = 0
+sumMaybeVect (Nothing  :: xs) = sumMaybeVect xs
+sumMaybeVect ((Just x) :: xs) = x + sumMaybeVect xs
 
 
 
@@ -41,7 +41,7 @@ totalExeptGiven:Fin n-> Vect n (Maybe Double) ->Double
 totalExeptGiven FZ [] impossible
 totalExeptGiven (FS _) [] impossible
 totalExeptGiven ind (weight::weights) = let dropped = deleteAt ind (weight::weights)
-                                         in sumOfMaybeVect dropped
+                                         in sumMaybeVect dropped
 
 
 public export
@@ -91,46 +91,54 @@ getResult (EvalLeaf x)           = valLeaf x
 getResult (EvalNode weights children result) = result
 
 public export
-minOfMaybeVectHelper:Vect m (Maybe Double)->Maybe Double->Maybe Double
-minOfMaybeVectHelper [] x = x
-minOfMaybeVectHelper (Nothing :: xs)  Nothing  = minOfMaybeVectHelper xs Nothing
-minOfMaybeVectHelper ((Just x) :: xs) Nothing  = minOfMaybeVectHelper xs (Just x)
-minOfMaybeVectHelper (Nothing :: xs)  (Just x) = minOfMaybeVectHelper xs (Just x)
-minOfMaybeVectHelper ((Just y) :: xs) (Just x) = case x<y of
-                                                  True  => minOfMaybeVectHelper xs (Just x)
-                                                  False => minOfMaybeVectHelper xs (Just y)
+minMaybeVectHelper:Vect m (Maybe Double)->Maybe Double->Maybe Double
+minMaybeVectHelper [] x = x
+minMaybeVectHelper (Nothing :: xs)  Nothing  = minMaybeVectHelper xs Nothing
+minMaybeVectHelper ((Just x) :: xs) Nothing  = minMaybeVectHelper xs (Just x)
+minMaybeVectHelper (Nothing :: xs)  (Just x) = minMaybeVectHelper xs (Just x)
+minMaybeVectHelper ((Just y) :: xs) (Just x) = case x<y of
+                                                  True  => minMaybeVectHelper xs (Just x)
+                                                  False => minMaybeVectHelper xs (Just y)
 
 
 public export
-minOfMaybeVect :Vect m (Maybe Double) -> Maybe Double
-minOfMaybeVect [] = Nothing
-minOfMaybeVect (x :: xs) = minOfMaybeVectHelper xs x
+minMaybeVect :Vect m (Maybe Double) -> Maybe Double
+minMaybeVect [] = Nothing
+minMaybeVect (x :: xs) = minMaybeVectHelper xs x
 
 
 
 public export
-maxOfMaybeVectHelper:Vect m (Maybe Double)->Maybe Double->Maybe Double
-maxOfMaybeVectHelper [] x = x
-maxOfMaybeVectHelper (Nothing :: xs)  Nothing  = maxOfMaybeVectHelper xs Nothing
-maxOfMaybeVectHelper ((Just x) :: xs) Nothing  = maxOfMaybeVectHelper xs (Just x)
-maxOfMaybeVectHelper (Nothing :: xs)  (Just x) = maxOfMaybeVectHelper xs (Just x)
-maxOfMaybeVectHelper ((Just y) :: xs) (Just x) = case x>y of
-                                                  True  => maxOfMaybeVectHelper xs (Just x)
-                                                  False => maxOfMaybeVectHelper xs (Just y)
+maxMaybeVectHelper:Vect m (Maybe Double)->Maybe Double->Maybe Double
+maxMaybeVectHelper [] x = x
+maxMaybeVectHelper (Nothing :: xs)  Nothing  = maxMaybeVectHelper xs Nothing
+maxMaybeVectHelper ((Just x) :: xs) Nothing  = maxMaybeVectHelper xs (Just x)
+maxMaybeVectHelper (Nothing :: xs)  (Just x) = maxMaybeVectHelper xs (Just x)
+maxMaybeVectHelper ((Just y) :: xs) (Just x) = case x>y of
+                                                  True  => maxMaybeVectHelper xs (Just x)
+                                                  False => maxMaybeVectHelper xs (Just y)
 
 
 public export
-maxOfMaybeVect :Vect m (Maybe Double) -> Maybe Double
-maxOfMaybeVect [] = Nothing
-maxOfMaybeVect (x :: xs) = maxOfMaybeVectHelper xs x
-
+maxMaybeVect :Vect m (Maybe Double) -> Maybe Double
+maxMaybeVect [] = Nothing
+maxMaybeVect (x :: xs) = maxMaybeVectHelper xs x
 
 public export
-avgOfMaybeVect :Vect m (Maybe Double) -> Maybe Double
-avgOfMaybeVect xs{m} = case isNothingVect xs of
+lenghtMaybeVect : Vect m (Maybe elem) -> Nat
+lenghtMaybeVect [] = 0
+lenghtMaybeVect (Nothing :: xs)  = lenghtMaybeVect xs
+lenghtMaybeVect ((Just x) :: xs) = 1 + lenghtMaybeVect xs
+
+public export
+avgMaybeVect :Vect m (Maybe Double) -> Maybe Double
+avgMaybeVect xs{m} = case isNothingVect xs of
                         True => Nothing
-                        False=> let s = sumOfMaybeVect xs
-                                 in Just (s/(cast)m)
+                        False=> let s = sumMaybeVect xs
+                                    l = lenghtMaybeVect xs
+                                 in Just (s/(cast)l)
+
+
 
 
 public export
@@ -142,9 +150,9 @@ arrange weights{n} aggVals  =  let ind = findIndices (==Nothing) aggVals
 
 public export
 process : Op -> Vect n( Maybe Double) -> Maybe Double
-process Min aggVals     = minOfMaybeVect aggVals
-process Max aggVals     = maxOfMaybeVect aggVals
-process Average aggVals = avgOfMaybeVect aggVals
+process Min aggVals     = minMaybeVect aggVals
+process Max aggVals     = maxMaybeVect aggVals
+process Average aggVals = avgMaybeVect aggVals
 
 
 public export
@@ -157,7 +165,7 @@ aggregate Sum (EvalNode vect{ws} ts r)=let aggTrees = (map (aggregate Sum) ts)
                                         in case isNothingVect(changedWeights) of
                                            True  => (EvalNode vect{ws} ts Nothing)
                                            False => let arranged = zipCaseOfNothing aggVals changedWeights
-                                                     in (EvalNode vect{ws} ts (Just (sumOfMaybeVect arranged)))
+                                                     in (EvalNode vect{ws} ts (Just (sumMaybeVect arranged)))
 aggregate o (EvalLeaf x) = (EvalLeaf x)
 aggregate o (EvalNode vect{ws} ts r)
   = let aggTrees = (map (aggregate o) ts)
@@ -166,57 +174,64 @@ aggregate o (EvalNode vect{ws} ts r)
 
 
 
-
+public export
 min_helper : List Double -> Double -> Double
 min_helper [] x = x
 min_helper (y :: xs) x = if y < x
                          then min_helper xs y
                          else min_helper xs x
 
+public export
 min : List Double -> Double
 min [] = 0
 min (x :: xs) = min_helper xs x
 
+public export
 max_helper : List Double -> Double -> Double
 max_helper [] x = x
 max_helper (y :: xs) x = if y > x
                          then max_helper xs y
                          else max_helper xs x
 
+public export
 max : List Double -> Double
 max [] = 0
 max (x :: xs) = max_helper xs x
 
 
-normalize : (Interval l u) -> Maybe Double -> Maybe LeafValue
-normalize (MkInterval l u x)  Nothing = Nothing
-normalize (MkInterval l u x) (Just input) = let value = ((input-l)/(u-l))
-                                             in case choose ( (l<=value) && (value <= u)) of
-                                               Left  cons => Just (MkLeaf value (MkInterval l u x) cons)
-                                               Right cons => Nothing
+public export
+normalize : (Interval l u) -> Norm -> Maybe Double -> Maybe LeafValue
+normalize (MkInterval l u x) norm Nothing = Nothing
+normalize (MkInterval l u x) (Single (nl :: (nu :: []))) (Just input)
+= let value = ((input-nl)/(nu-nl))
+   in case choose ( (l<=value) && (value <= u)) of
+       Left  cons => Just (MkLeaf value (MkInterval l u x) cons)
+       Right cons => Nothing
+normalize (MkInterval l u x) (Plural zs) (Just input)
+= let nl=AggregationLib.min zs
+      nu=AggregationLib.max zs
+      value = ((input-nl)/(nu-nl))
+   in case choose ( (l<=value) && (value <= u)) of
+       Left  cons => Just (MkLeaf value (MkInterval l u x) cons)
+       Right cons => Nothing
 
 
 
-normalization : List (Maybe Double) -> List Norm -> List (Maybe LeafValue)
-normalization [] norms = []
-normalization (x :: xs) [] = []
-normalization (x :: xs) ((Single (lower :: (upper :: []))) :: ys)
-= case choose (lower <= upper ) of
-      Left  s => let interval = (MkInterval lower upper s)
-                  in [normalize interval x] ++ normalization xs ys
-      Right s => [Nothing] ++ normalization xs ys
-normalization (x :: xs) ((Plural zs) :: ys)
-= case choose (AggregationLib.min zs <= AggregationLib.max zs) of
-      Left  s => let interval = (MkInterval (AggregationLib.min zs) (AggregationLib.max zs) s)
-                  in [normalize interval x] ++ normalization xs ys
-      Right s => [Nothing] ++ normalization xs ys
+
+public export
+normalization : List (Maybe Double) -> List Norm ->(Interval l u)-> List (Maybe LeafValue)
+normalization [] norms interval= []
+normalization (x :: xs) [] interval= []
+normalization (x :: xs) (norm::norms) interval
+= [normalize interval norm x] ++ normalization xs norms interval
 
 
 
-aggregator: EvalTree -> List (Maybe Double) ->List Norm -> Op -> Double
-aggregator tree inputs norms op= let newInputs = normalization inputs norms
-                                  in let newTree   = setLeafs newInputs tree
-                                         resultTree= aggregate op newTree
-                                      in case getResult resultTree of
-                                          Nothing => 0
-                                          Just result => result
+public export
+aggregator: EvalTree -> List (Maybe Double) -> List Norm -> Op ->(Interval l u) -> Double
+aggregator tree inputs norms op interval= let newInputs = normalization inputs norms interval
+                                           in let newTree   = setLeafs newInputs tree
+                                                  resultTree= aggregate op newTree
+                                               in case getResult resultTree of
+                                                 Nothing => 0
+                                                 Just result => result

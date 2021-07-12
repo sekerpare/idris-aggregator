@@ -13,7 +13,9 @@ data LeafValue :Type where
 
 public export
 data  EvalTree = EvalLeaf (Maybe LeafValue)
-               | EvalNode (WeightVect ws{n} )  (Vect n  EvalTree) (Maybe Double)
+               | EvalNode (WeightVect ws{n} )
+                          (Vect n  EvalTree)
+                          (Maybe Double)
 
 
 public export

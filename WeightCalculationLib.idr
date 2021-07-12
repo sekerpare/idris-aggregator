@@ -3,10 +3,6 @@ import AggregationLib
 data  LargerIsBetter = True | False
 
 -- HELPERS ------------------------------------------------------------
-lenghtMaybeVect : Vect m (Maybe elem) -> Nat
-lenghtMaybeVect [] = 0
-lenghtMaybeVect (Nothing :: xs)  = lenghtMaybeVect xs
-lenghtMaybeVect ((Just x) :: xs) = 1 + lenghtMaybeVect xs
 
 --EDWIN --kitaba bak !
 
@@ -159,9 +155,9 @@ R_helper ((Just z) :: zs) the_mean1 ((Just w) :: ws) the_mean2 = (z - the_mean1)
 
 
 R : Vect n (Maybe Double) -> Vect n (Maybe Double) -> Double
-R row1 row2 = let upper = R_helper row1 (mean row1) row2 (mean row2)
-                  down  = sqrt((variance_helper row1 (mean row1))*(variance_helper row2 (mean row2)))
-               in upper/down
+R row1 row2 = let num = R_helper row1 (mean row1) row2 (mean row2)
+                  den  = sqrt((variance_helper row1 (mean row1))*(variance_helper row2 (mean row2)))
+               in num/den
 
 calculate_R_helper2 : Vect m (Vect n (Maybe Double)) -> Vect n (Maybe Double)  -> Vect m Double
 calculate_R_helper2 ys xs = map (R xs) ys
@@ -215,8 +211,12 @@ Wc= [0.28567307169582673, 0.250977800613785 , 0.4633491276903883]
 
 
 --Step5-----------------------------------------------------------------------------------------------------------
-final_Weight_2 : Double -> Double -> Double -> Double
-final_Weight_2 w1 w2 lambda = w1*lambda + w2*(1-lambda)
+final_weight_2 : Double -> Double -> Double -> Double
+final_weight_2 lambda w1 w2  = w1*lambda + w2*(1-lambda)
 
-final_Weight_3 : Double -> Double -> Double -> Double -> Double
-final_Weight_3 w1 w2 w3 lambda = w1*lambda + w2*(1-lambda)/2 +  w3*(1-lambda)/2
+final_weight_3 : Double -> Double -> Double -> Double -> Double
+final_weight_3 w1 w2 w3 lambda = w1*lambda + w2*(1-lambda)/2 +  w3*(1-lambda)/2
+
+
+calculate_final_weight2 : (Vect n Double) -> (Vect n Double) -> Double -> (Vect n Double)
+calculate_final_weight2  wt1 wt2 lambda = zipWith (final_weight_2 lambda)  wt1 wt2
