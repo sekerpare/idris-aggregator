@@ -223,3 +223,6 @@ final_weight_3 w1 w2 w3 lambda = w1*lambda + w2*(1-lambda)/2 +  w3*(1-lambda)/2
 
 calculate_final_weight2 : (Vect n Double) -> (Vect n Double) -> Double -> (Vect n Double)
 calculate_final_weight2  wt1 wt2 lambda = zipWith (final_weight_2 lambda)  wt1 wt2
+
+calculate_final_weight3 : (Vect n Double)->(Vect n Double) -> (Vect n Double) -> Double -> (Vect n Double)
+calculate_final_weight3  wt1 wt2 wt3 lambda = zipWith3 (final_weight_3 lambda)  wt1 wt2 wt3
