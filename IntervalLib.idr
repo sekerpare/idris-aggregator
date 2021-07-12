@@ -5,6 +5,9 @@ import Data.So
 
 %default total
 
+--Source of the Interval is :
+--[1]Syntax Extensions. Syntax Extensions - Idris 1.3.3 documentation. (n.d.). http://docs.idris-lang.org/en/latest/tutorial/syntax.html.
+
 public export
 data Interval : (lower : Double)->(upper  : Double) -> Type where
       MkInterval : (lower : Double)->(upper  : Double) ->
