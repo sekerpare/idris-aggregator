@@ -3,17 +3,20 @@ import AggregationLib
 data  LargerIsBetter = True | False
 
 -- HELPERS ------------------------------------------------------------
+--transpose_mat directly taken from:
+--[1] Brady, E. (2017). 3.3.2 Transposing a matrix. In Type-driven development with Idris. essay, Manning Publications Co. 
 
---EDWIN --kitaba bak !
-
+--[1] 
 empties : Vect m (Vect 0 elem)
 empties {m = Z} = []
 empties {m = (S k)} = [] :: empties
 
+--[1] 
 transposeHelper : (x : Vect m elem) -> (xs_trans : Vect m (Vect len elem)) -> Vect m (Vect (S len) elem)
 transposeHelper [] [] = []
 transposeHelper (x :: xs) (y :: ys) = (x :: y) :: transposeHelper xs ys
 
+--[1] 
 transpose_mat : Vect n (Vect m elem) -> Vect m (Vect n elem)
 transpose_mat [] = empties
 transpose_mat (x :: xs)
